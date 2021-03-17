@@ -11,14 +11,11 @@ static const char *menu_title = NULL;
 static const char *url = NULL;
 static GtkWidget *openMenuItem = NULL;
 static GtkWidget *copyMenuItem = NULL;
+static GtkWindow *rootWindow = NULL;
 
 static void handle_open(GtkStatusIcon *status_icon, gpointer user_data)
 {
-    pid_t pid = fork();
-    if (pid == 0)
-    {
-        execlp("xdg-open", "xdg-open", url, (char*)NULL);
-    }
+  gtk_window_present(rootWindow);
 }
 
 static void handle_copy_to_clipboard(GtkStatusIcon *status_icon, gpointer user_data)
@@ -38,23 +35,17 @@ static void tray_icon_on_menu(GtkStatusIcon *status_icon, guint button, guint ac
     GtkWidget *titleMenuItem = gtk_menu_item_new_with_label(menu_title);
     gtk_widget_set_sensitive(titleMenuItem, FALSE);
     openMenuItem = gtk_menu_item_new_with_label("Open in Browser");
-    copyMenuItem = gtk_menu_item_new_with_label("Copy Link to Clipboard");
-    if (!url) {
-        gtk_widget_set_sensitive(openMenuItem, FALSE);
-        gtk_widget_set_sensitive(copyMenuItem, FALSE);
-    }
+    gtk_widget_set_sensitive(openMenuItem, FALSE);
     GtkWidget *exitMenuItem = gtk_menu_item_new_with_label("Exit");
     GtkWidget *menu = gtk_menu_new();
 
     g_signal_connect(G_OBJECT(titleMenuItem), "activate", G_CALLBACK(handle_open), NULL);
     g_signal_connect(G_OBJECT(openMenuItem), "activate", G_CALLBACK(handle_open), NULL);
-    g_signal_connect(G_OBJECT(copyMenuItem), "activate", G_CALLBACK(handle_copy_to_clipboard), NULL);
     g_signal_connect(G_OBJECT(exitMenuItem), "activate", G_CALLBACK(tray_exit), NULL);
 
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), titleMenuItem);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), openMenuItem);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), copyMenuItem);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), exitMenuItem);
     gtk_widget_show_all(menu);
@@ -97,6 +88,13 @@ void native_loop(const char* title, unsigned char *imageData, unsigned int image
     gtk_init(&argc, (char***)&argv);
     create_tray_icon(imageData, imageDataLen);
     gtk_main();
+}
+
+void set_window(void *window, const char *title, unsigned char *imageData, unsigned int imageDataLen)
+{
+  menu_title = title;
+  rootWindow = (GtkWindow*)window;
+  create_tray_icon(imageData, imageDataLen);
 }
 
 #endif // NATIVE_C

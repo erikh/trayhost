@@ -47,7 +47,7 @@ import "C"
 var isExiting bool
 var urlPtr unsafe.Pointer
 
-// Run the host system's event loop
+// EnterLoop runs the host system's event loop
 func EnterLoop(title string, imageData []byte) {
 	defer C.free(urlPtr)
 
@@ -74,8 +74,8 @@ func EnterLoop(title string, imageData []byte) {
 	isExiting = true
 }
 
-// Set the URL that the tray icon will open in a browser
-func SetUrl(url string) {
+// SetURL sets the URL that the tray icon will open in a browser
+func SetURL(url string) {
 	if isExiting {
 		return
 	}
@@ -83,4 +83,11 @@ func SetUrl(url string) {
 	C.free(urlPtr)
 	urlPtr = unsafe.Pointer(cs)
 	C.set_url(cs)
+}
+
+// SetWindow sets the window from webview
+func SetWindow(p unsafe.Pointer, title string, imageData []byte) {
+	// Enter the loop
+	cs := C.CString(title) // XXX THIS IS NOT FREED
+	C.set_window(p, cs, (*C.uchar)(&imageData[0]), C.uint(len(imageData)))
 }
